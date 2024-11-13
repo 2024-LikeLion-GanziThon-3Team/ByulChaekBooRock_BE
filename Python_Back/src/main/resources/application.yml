@@ -6,9 +6,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://python-db.cp8ek6aewztu.ap-northeast-2.rds.amazonaws.com:3306/db1?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-    username: admin
-    password: yukr1009!
+    url:
+    username:
+    password:
 
 
 
