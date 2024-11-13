@@ -24,5 +24,5 @@ public class BookMark {
     private String content;
 
     private LocalDateTime createdAt;
-
+    private LocalDateTime updateAt;
 }

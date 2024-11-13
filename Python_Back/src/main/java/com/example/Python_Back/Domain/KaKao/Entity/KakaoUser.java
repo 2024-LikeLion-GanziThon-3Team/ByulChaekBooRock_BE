@@ -1,6 +1,5 @@
 package com.example.Python_Back.Domain.KaKao.Entity;
 
-import com.example.Python_Back.Domain.ByulBook.Entity.Shelf;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,25 +19,30 @@ public class KakaoUser {
     @Column(nullable = false)
     private String nickname;
 
+    // 프로필 이미지 URL (옵션)
+   // private String profileImageUrl;
+
     // 연결된 시간 (카카오 로그인)
     private LocalDateTime connectedAt;
 
-    @OneToOne(mappedBy = "kakaoUser", cascade = CascadeType.ALL)
-    private Shelf shelf;
+    // 액세스 토큰 (로그인 시 저장)
+    // private String accessToken;
+
+    // 리프레시 토큰 (필요 시 갱신용으로 저장)
+   // private String refreshToken;
 
     // 기본 생성자
-    public KakaoUser() {
-        // 사용자가 생성될 때 서재를 자동으로 생성
-        this.shelf = new Shelf(this);  // Shelf 생성 시 현재 KakaoUser와 연결
-    }
+    public KakaoUser() {}
 
     // 모든 필드를 받는 생성자
     public KakaoUser(Long kakaoId, String nickname, LocalDateTime connectedAt) {
         this.kakaoId = kakaoId;
         this.nickname = nickname;
+        //this.profileImageUrl = profileImageUrl;
         this.connectedAt = connectedAt;
+       // this.accessToken = accessToken;
 
-        // 사용자가 생성될 때 서재를 자동으로 생성
-       // this.shelf = new Shelf(this);
     }
+
+
 }
