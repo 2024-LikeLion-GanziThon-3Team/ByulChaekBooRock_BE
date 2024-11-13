@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -21,21 +20,17 @@ public class ShelfBook {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long shelfBookId;  // 책장에 추가된 책의 고유 ID
+    private Long ShelfBookId;
 
     @ManyToOne
-    @JoinColumn(name = "shelfId")
-    private Shelf shelf;  // 서재와의 다대일 관계
-
-    @ManyToOne
-    @JoinColumn(name = "bookId")
-    private Book book;  // 책과의 다대일 관계
+    @JoinColumn(name = "ShelfId")
+    private Shelf shelf;
 
     @Enumerated(EnumType.STRING)
-    private BookStatus status;  // 책 상태 (다 읽은 책, 덜 읽은 책, 안 읽은 책)
+    private BookStatus status;
 
-    @OneToMany(mappedBy = "shelfBook", cascade = CascadeType.ALL)
-    private List<BookMark> bookmarks = new ArrayList<>(); // 책갈피 목록
+   // @OneToMany(mappedBy = "shelfBook", cascade = CascadeType.ALL)
+    //private List<Bookmark> bookmarks = new ArrayList<>();  // 책갈피 목록
 
 
 }
