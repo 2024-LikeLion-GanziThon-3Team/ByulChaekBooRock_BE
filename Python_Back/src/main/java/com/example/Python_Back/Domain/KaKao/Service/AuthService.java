@@ -1,0 +1,147 @@
+package com.example.Python_Back.Domain.KaKao.Service;
+
+import com.example.Python_Back.Domain.KaKao.Entity.KakaoUser;
+import com.example.Python_Back.Domain.KaKao.Repository.KakaoUserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
+
+@Service
+@Slf4j
+public class AuthService {
+    @Value("${kakao.api.key}")
+    private String restApiKey;
+
+    @Value("${kakao.redirect_uri}")
+    private String redirectUri;
+
+
+    private final KakaoUserRepository kakaoUserRepository;
+
+    // 생성자 주입을 사용하여 의존성 주입
+    public AuthService(KakaoUserRepository kakaoUserRepository) {
+        this.kakaoUserRepository = kakaoUserRepository;
+    }
+
+
+    RestTemplate restTemplate = new RestTemplate();
+    public String kakaoGetAccessViaCode(String code) {
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("code", code);
+        body.add("client_id", restApiKey); // 카카오 REST API 키
+        body.add("redirect_uri", redirectUri);
+        body.add("grant_type", "authorization_code");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<JsonNode> responseNode = restTemplate.exchange("https://kauth.kakao.com/oauth/token", HttpMethod.POST, entity, JsonNode.class);
+        String accessToken = responseNode.getBody().get("access_token").asText();
+        return accessToken;
+    }
+    // 카카오 사용자 정보 가져오기 및 DB에 저장
+    @Transactional
+    public KakaoUser kakaoGetUserInfoViaAccessToken(String accessToken) {
+        // 1. 카카오 API로 사용자 정보 가져오기
+        try {
+            // 1. 카카오 API로 사용자 정보 가져오기
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<JsonNode> responseNode = restTemplate.exchange(
+                    "https://kapi.kakao.com/v2/user/me", HttpMethod.GET, entity, JsonNode.class
+            );
+            JsonNode userInfo = responseNode.getBody();
+
+            // 2. 사용자 정보 추출
+            Long kakaoId = userInfo.get("id").asLong();
+            String nickname = userInfo.get("properties").get("nickname").asText();
+            String profileImageUrl = userInfo.get("properties").get("profile_image").asText();
+            String connectedAtString = userInfo.get("connected_at").asText();
+            LocalDateTime connectedAt = LocalDateTime.parse(connectedAtString.substring(0, 19));
+
+
+            // 3. KakaoUser 엔티티로 변환
+            KakaoUser kakaoUser = new KakaoUser();
+            kakaoUser.setKakaoId(kakaoId);
+            kakaoUser.setNickname(nickname);
+            kakaoUser.setConnectedAt(connectedAt);
+
+
+            // 4. 데이터베이스에 저장
+            try {
+                kakaoUserRepository.save(kakaoUser);
+            } catch (Exception e) {
+                log.error("DB에 사용자 정보 저장 실패: ", e);
+                throw e; // 필요 시 예외를 다시 던질 수 있습니다.
+            }
+
+            return kakaoUser;
+
+        } catch (Exception e) {
+            // 예외 발생 시 오류 로그 출력
+            log.error("Failed to fetch Kakao user info", e);
+            return null;
+        }
+    }
+
+    @Transactional
+    public String kakaoLogout(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<JsonNode> responseNode = restTemplate.exchange(
+                "https://kapi.kakao.com/v1/user/logout",
+                HttpMethod.POST,
+                entity,
+                JsonNode.class
+        );
+
+        log.info("로그아웃 응답: {}", responseNode.getBody().toPrettyString());
+
+        return responseNode.getBody().toString();
+    }
+
+    @Transactional
+    public String kakaoUnlink(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<JsonNode> responseNode = restTemplate.exchange(
+                "https://kapi.kakao.com/v1/user/unlink",
+                HttpMethod.POST,
+                entity,
+                JsonNode.class
+        );
+        // 응답에서 사용자 ID 추출
+        Long kakaoId = responseNode.getBody().get("id").asLong();
+
+        // 데이터베이스에서 사용자 삭제
+        kakaoUserRepository.deleteByKakaoId(kakaoId);
+
+        log.info("탈퇴 응답: {}", responseNode.getBody().toPrettyString());
+
+        // 반환할 때 메시지를 포함한 전체 JSON을 반환하도록 조정
+        return responseNode.getBody().toString(); // 필요에 따라 반환 형식을 조정
+    }
+
+
+
+}
