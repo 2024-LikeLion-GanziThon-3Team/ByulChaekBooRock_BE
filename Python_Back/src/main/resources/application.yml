@@ -23,3 +23,5 @@ spring:
 
 
 
+## ??? ??(code??) :
+## https://kauth.kakao.com/oauth/authorize?client_id=8b3370e9d8189349e351bb10d7b620b7&redirect_uri=http://localhost:3000/oauth/kakao/callback&response_type=code

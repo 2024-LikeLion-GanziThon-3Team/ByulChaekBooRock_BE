@@ -30,7 +30,7 @@ public class AuthController {
             // 1단계: 전달받은 인가 코드를 사용하여 Kakao에서 액세스 토큰 발급
             String accessToken = authService.kakaoGetAccessViaCode(code);
 
-            // 2단계: 액세스 토큰을 사용하여 Kakao 사용자 정보 조회 및 데이터베이스에 저장
+            // 2단계: 액세스 토큰을 사용하여 Kakao 사용자 정보 조회 및 서재 생성
             KakaoUser kakaoUser = authService.kakaoGetUserInfoViaAccessToken(accessToken);
 
             // 헤더에 토큰을 포함시켜 반환
