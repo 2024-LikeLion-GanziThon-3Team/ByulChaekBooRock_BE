@@ -4,7 +4,11 @@ spring:
 
 
 
-
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://python-db.cp8ek6aewztu.ap-northeast-2.rds.amazonaws.com:3306/db1?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+    username: admin
+    password: yukr1009!
 
 
 
@@ -21,3 +25,10 @@ spring:
 
 
 
+kakao:
+  redirect_uri: http://localhost:3000/oauth/kakao/callback
+  api:
+    key: 8b3370e9d8189349e351bb10d7b620b7
+
+## ??? ??(code??) :
+## https://kauth.kakao.com/oauth/authorize?client_id=8b3370e9d8189349e351bb10d7b620b7&redirect_uri=http://localhost:3000/oauth/kakao/callback&response_type=code
