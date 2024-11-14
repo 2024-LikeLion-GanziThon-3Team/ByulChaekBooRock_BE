@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -140,6 +141,42 @@ public class AuthService {
 
         // 반환할 때 메시지를 포함한 전체 JSON을 반환하도록 조정
         return responseNode.getBody().toString(); // 필요에 따라 반환 형식을 조정
+    }
+
+    @Transactional
+    public Long kakaoGetUserIdFromTokenInfo(String accessToken) {
+        String url = "https://kapi.kakao.com/v1/user/access_token_info";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        log.info("Authorization 헤더 설정 완료: Bearer " + accessToken);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    url, HttpMethod.GET, entity, JsonNode.class);
+
+            JsonNode body = response.getBody();
+            log.info("카카오 API 응답 본문: " + body);
+
+            if (body != null && body.has("id")) {
+                Long kakaoUserId = body.get("id").asLong();
+                log.info("카카오 사용자 ID: " + kakaoUserId);
+                return kakaoUserId;
+            } else {
+                log.error("토큰 정보 조회 실패 또는 유효하지 않은 토큰입니다. 응답 본문: " + body);
+                return null;
+            }
+
+        } catch (HttpClientErrorException e) {
+            log.error("카카오 API 클라이언트 오류: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            throw new RuntimeException("카카오 API 클라이언트 오류", e);
+        } catch (Exception e) {
+            log.error("카카오 토큰 정보 조회 실패", e);
+            throw new RuntimeException("카카오 토큰 정보 조회에 실패했습니다.", e);
+        }
     }
 
 
