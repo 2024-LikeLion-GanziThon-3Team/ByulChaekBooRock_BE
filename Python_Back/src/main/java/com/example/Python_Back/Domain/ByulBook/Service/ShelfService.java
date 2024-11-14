@@ -1,11 +1,18 @@
 package com.example.Python_Back.Domain.ByulBook.Service;
 
+import com.example.Python_Back.Domain.ByulBook.DTO.ShelfBookResponseDTO;
+import com.example.Python_Back.Domain.ByulBook.DTO.ShelfBooksByStatusDTO;
 import com.example.Python_Back.Domain.ByulBook.Entity.Book;
 import com.example.Python_Back.Domain.ByulBook.Entity.Shelf;
 import com.example.Python_Back.Domain.ByulBook.Entity.ShelfBook;
 import com.example.Python_Back.Domain.ByulBook.Repository.ShelfRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ShelfService {
@@ -42,5 +49,38 @@ public class ShelfService {
 
         shelf.getShelfBooks().add(shelfBook);
         return shelfBook;
+    }
+
+    // 서재에서 책들을 상태별로 분류하여 반환
+    public ShelfBooksByStatusDTO getShelfBooksByStatus(Long kakaoId) {
+        // 서재 조회
+        Shelf shelf = shelfRepository.findByKakaoUser_KakaoId(kakaoId)
+                .orElseThrow(() -> new IllegalArgumentException("서재를 찾을 수 없습니다."));
+
+        // 책 상태별 분류
+        List<ShelfBookResponseDTO> readBooks = new ArrayList<>();
+        List<ShelfBookResponseDTO> partiallyReadBooks = new ArrayList<>();
+        List<ShelfBookResponseDTO> unreadBooks = new ArrayList<>();
+
+        for (ShelfBook shelfBook : shelf.getShelfBooks()) {
+            ShelfBookResponseDTO shelfBookResponseDTO = new ShelfBookResponseDTO(
+                    shelfBook.getBook().getTitle(),
+                    shelfBook.getBook().getCoverImageUrl()
+            );
+
+            switch (shelfBook.getStatus()) {
+                case 다읽은책 -> readBooks.add(shelfBookResponseDTO);
+                case 덜읽은책 -> partiallyReadBooks.add(shelfBookResponseDTO);
+                case 안읽은책 -> unreadBooks.add(shelfBookResponseDTO);
+            }
+        }
+
+        // DTO 반환
+        return new ShelfBooksByStatusDTO(
+                shelf.getKakaoUser().getKakaoId(), // 사용자 ID
+                readBooks,
+                partiallyReadBooks,
+                unreadBooks
+        );
     }
 }

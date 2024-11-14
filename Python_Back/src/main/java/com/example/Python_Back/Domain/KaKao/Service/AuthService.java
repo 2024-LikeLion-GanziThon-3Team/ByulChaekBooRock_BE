@@ -1,5 +1,6 @@
 package com.example.Python_Back.Domain.KaKao.Service;
 
+import com.example.Python_Back.Domain.ByulBook.Entity.Shelf;
 import com.example.Python_Back.Domain.KaKao.Entity.KakaoUser;
 import com.example.Python_Back.Domain.KaKao.Repository.KakaoUserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -53,7 +54,6 @@ public class AuthService {
     // 카카오 사용자 정보 가져오기 및 DB에 저장
     @Transactional
     public KakaoUser kakaoGetUserInfoViaAccessToken(String accessToken) {
-        // 1. 카카오 API로 사용자 정보 가져오기
         try {
             // 1. 카카오 API로 사용자 정보 가져오기
             HttpHeaders headers = new HttpHeaders();
@@ -72,28 +72,30 @@ public class AuthService {
             String connectedAtString = userInfo.get("connected_at").asText();
             LocalDateTime connectedAt = LocalDateTime.parse(connectedAtString.substring(0, 19));
 
+            // 3. 기존 사용자 확인 또는 생성
+            KakaoUser kakaoUser = kakaoUserRepository.findById(kakaoId).orElseGet(() -> {
+                // 새로운 사용자 생성
+                KakaoUser newUser = new KakaoUser();
+                newUser.setKakaoId(kakaoId);
+                newUser.setNickname(nickname);
+                newUser.setConnectedAt(connectedAt);
+                return newUser;
+            });
 
-            // 3. KakaoUser 엔티티로 변환
-            KakaoUser kakaoUser = new KakaoUser();
-            kakaoUser.setKakaoId(kakaoId);
-            kakaoUser.setNickname(nickname);
-            kakaoUser.setConnectedAt(connectedAt);
-
-
-            // 4. 데이터베이스에 저장
-            try {
-                kakaoUserRepository.save(kakaoUser);
-            } catch (Exception e) {
-                log.error("DB에 사용자 정보 저장 실패: ", e);
-                throw e; // 필요 시 예외를 다시 던질 수 있습니다.
+            // 4. 서재 확인 및 생성
+            if (kakaoUser.getShelf() == null) {
+                Shelf shelf = new Shelf();
+                shelf.setKakaoUser(kakaoUser);
+                kakaoUser.setShelf(shelf);
             }
 
-            return kakaoUser;
+            // 5. 사용자 정보 저장
+            kakaoUserRepository.save(kakaoUser);
 
+            return kakaoUser;
         } catch (Exception e) {
-            // 예외 발생 시 오류 로그 출력
-            log.error("Failed to fetch Kakao user info", e);
-            return null;
+            log.error("카카오 사용자 정보 조회 실패", e);
+            throw new RuntimeException("카카오 사용자 정보 조회에 실패했습니다.", e);
         }
     }
 
