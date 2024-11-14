@@ -39,6 +39,6 @@ public class KakaoUser {
         this.connectedAt = connectedAt;
 
         // 사용자가 생성될 때 서재를 자동으로 생성
-        this.shelf = new Shelf(this);
+       // this.shelf = new Shelf(this);
     }
 }
