@@ -1,30 +1,20 @@
 package com.example.Python_Back.Domain.ByulBook.Service;
 
-import com.example.Python_Back.Domain.ByulBook.DTO.ShelfBookResponseDTO;
-import com.example.Python_Back.Domain.ByulBook.DTO.ShelfBooksByStatusDTO;
 import com.example.Python_Back.Domain.ByulBook.Entity.Book;
 import com.example.Python_Back.Domain.ByulBook.Entity.Shelf;
 import com.example.Python_Back.Domain.ByulBook.Entity.ShelfBook;
-import com.example.Python_Back.Domain.ByulBook.Repository.BookRepository;
 import com.example.Python_Back.Domain.ByulBook.Repository.ShelfRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class ShelfService {
     private final ShelfRepository shelfRepository;
     private final BookService bookService;
-    private final BookRepository bookRepository;
 
-    public ShelfService(ShelfRepository shelfRepository, BookService bookService, BookRepository bookRepository) {
+    public ShelfService(ShelfRepository shelfRepository, BookService bookService) {
         this.shelfRepository = shelfRepository;
         this.bookService = bookService;
-        this.bookRepository = bookRepository;
     }
 
     @Transactional
@@ -33,11 +23,10 @@ public class ShelfService {
         Shelf shelf = shelfRepository.findByKakaoUser_KakaoId(kakaoId)
                 .orElseThrow(() -> new IllegalArgumentException("서재를 찾을 수 없습니다."));
 
-        // 책이 Book 엔티티에 존재하는지 확인
-        Book book = bookRepository.findByTitle(title)
-                .orElseThrow(() -> new IllegalArgumentException("해당 책은 존재하지 않습니다."));
+        // 책을 저장하거나 기존 책 반환
+        Book book = bookService.saveBookByTitle(title);
 
-        // 서재에 이미 같은 책이 있는지 확인
+        // 서재에 이미 있는 책인지 확인
         boolean alreadyExists = shelf.getShelfBooks().stream()
                 .anyMatch(shelfBook -> shelfBook.getBook().getBookId().equals(book.getBookId()));
 
@@ -49,44 +38,9 @@ public class ShelfService {
         ShelfBook shelfBook = new ShelfBook();
         shelfBook.setShelf(shelf);
         shelfBook.setBook(book);
-        shelfBook.setStatus(ShelfBook.BookStatus.안읽은책); // 기본 상태 설정
+        shelfBook.setStatus(ShelfBook.BookStatus.안읽은책);  // 기본 상태 설정
 
         shelf.getShelfBooks().add(shelfBook);
-        shelfRepository.save(shelf); // Shelf 저장 (Cascade로 ShelfBook 저장됨)
-
         return shelfBook;
-    }
-
-    // 서재에서 책들을 상태별로 분류하여 반환
-    public ShelfBooksByStatusDTO getShelfBooksByStatus(Long kakaoId) {
-        // 서재 조회
-        Shelf shelf = shelfRepository.findByKakaoUser_KakaoId(kakaoId)
-                .orElseThrow(() -> new IllegalArgumentException("서재를 찾을 수 없습니다."));
-
-        // 책 상태별 분류
-        List<ShelfBookResponseDTO> readBooks = new ArrayList<>();
-        List<ShelfBookResponseDTO> partiallyReadBooks = new ArrayList<>();
-        List<ShelfBookResponseDTO> unreadBooks = new ArrayList<>();
-
-        for (ShelfBook shelfBook : shelf.getShelfBooks()) {
-            ShelfBookResponseDTO shelfBookResponseDTO = new ShelfBookResponseDTO(
-                    shelfBook.getBook().getTitle(),
-                    shelfBook.getBook().getCoverImageUrl()
-            );
-
-            switch (shelfBook.getStatus()) {
-                case 다읽은책 -> readBooks.add(shelfBookResponseDTO);
-                case 덜읽은책 -> partiallyReadBooks.add(shelfBookResponseDTO);
-                case 안읽은책 -> unreadBooks.add(shelfBookResponseDTO);
-            }
-        }
-
-        // DTO 반환
-        return new ShelfBooksByStatusDTO(
-                shelf.getKakaoUser().getKakaoId(), // 사용자 ID
-                readBooks,
-                partiallyReadBooks,
-                unreadBooks
-        );
     }
 }
