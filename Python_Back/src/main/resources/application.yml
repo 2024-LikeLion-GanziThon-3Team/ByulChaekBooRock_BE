@@ -3,11 +3,6 @@ spring:
     name: Python_Back
 
 
-
-
-
-
-
   jpa:
     properties:
       hibernate:
@@ -18,8 +13,4 @@ spring:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     database-platform: org.hibernate.dialect.MySQL8Dialect
-
-
-
-
 
