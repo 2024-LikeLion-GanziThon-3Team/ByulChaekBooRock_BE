@@ -15,6 +15,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -181,6 +183,37 @@ public class AuthService {
         }
     }
 
+    // 액세스 토큰 정보 확인
+    public Map<String, Object> getTokenInfo(String accessToken) {
+        String url = "https://kapi.kakao.com/v1/user/access_token_info";
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    url, HttpMethod.GET, entity, JsonNode.class
+            );
+
+            JsonNode body = response.getBody();
+            log.info("토큰 정보 확인 응답: {}", body);
+
+            // 응답 데이터 파싱
+            Map<String, Object> tokenInfo = new HashMap<>();
+            tokenInfo.put("id", body.get("id").asLong());
+            tokenInfo.put("expires_in", body.get("expires_in").asInt());
+            tokenInfo.put("app_id", body.get("app_id").asInt());
+
+            return tokenInfo;
+        } catch (HttpClientErrorException e) {
+            log.error("카카오 API 요청 오류: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            throw new RuntimeException("토큰 정보 확인에 실패했습니다.", e);
+        } catch (Exception e) {
+            log.error("토큰 정보 확인 실패", e);
+            throw new RuntimeException("알 수 없는 오류로 토큰 정보를 확인할 수 없습니다.", e);
+        }
+    }
 
 }
