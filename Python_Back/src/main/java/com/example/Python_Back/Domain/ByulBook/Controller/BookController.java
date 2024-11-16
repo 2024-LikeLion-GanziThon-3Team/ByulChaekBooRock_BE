@@ -51,7 +51,7 @@ public class BookController {
             response.setTitle(title);
 
             if (reviews.isEmpty()) {
-                response.setReviews(Arrays.asList("감상이 없습니다."));
+                response.setReviews(Arrays.asList(""));
             } else {
                 response.setReviews(reviews);
             }
