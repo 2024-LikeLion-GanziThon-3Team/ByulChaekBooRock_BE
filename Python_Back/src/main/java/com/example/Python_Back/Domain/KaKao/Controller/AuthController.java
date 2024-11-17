@@ -73,6 +73,24 @@ public class AuthController {
         }
     }
 
+    // 액세스 토큰 정보 확인
+    @GetMapping("/tokenInfo")
+    public ResponseEntity<Object> getTokenInfo(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            // "Bearer " 접두어 제거
+            String accessToken = authorizationHeader.replace("Bearer ", "");
+
+            // 서비스 호출
+            Map<String, Object> tokenInfo = authService.getTokenInfo(accessToken);
+
+            // 응답 반환
+            return ResponseEntity.ok(tokenInfo);
+        } catch (Exception e) {
+            log.error("토큰 정보 확인 실패: ", e);
+            return ResponseEntity.status(500).body("토큰 정보 확인 실패: " + e.getMessage());
+        }
+    }
+
 
 
 
