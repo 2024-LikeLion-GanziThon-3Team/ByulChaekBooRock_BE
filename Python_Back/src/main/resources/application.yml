@@ -2,6 +2,11 @@ spring:
   application:
     name: Python_Back
 
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://database-1.cdoma84ak9oq.ap-northeast-2.rds.amazonaws.com:3306/db1?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+    username: admin
+    password: admin1234
 
   jpa:
     properties:
@@ -14,4 +19,7 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     database-platform: org.hibernate.dialect.MySQLDialect
 
-
+kakao:
+  redirect_uri: http://localhost:3000/oauth/kakao/callback
+  api:
+    key: 8b3370e9d8189349e351bb10d7b620b7
