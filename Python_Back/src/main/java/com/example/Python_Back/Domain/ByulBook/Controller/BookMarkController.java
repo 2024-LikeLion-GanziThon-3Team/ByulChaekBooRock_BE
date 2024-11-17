@@ -1,48 +1,68 @@
 package com.example.Python_Back.Domain.ByulBook.Controller;
 
-import com.example.Python_Back.Domain.ByulBook.DTO.BookMarkResponseDTO;
+import com.example.Python_Back.Domain.ByulBook.DTO.BookMarkDTO;
 import com.example.Python_Back.Domain.ByulBook.Service.BookMarkService;
-import com.example.Python_Back.Domain.KaKao.Service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookmark")
 public class BookMarkController {
 
     private final BookMarkService bookMarkService;
-    private final AuthService authService;
 
-    public BookMarkController(BookMarkService bookMarkService, AuthService authService) {
+    public BookMarkController(BookMarkService bookMarkService) {
         this.bookMarkService = bookMarkService;
-        this.authService = authService;
     }
 
     // 책갈피 추가 API
     @PostMapping("/add")
-    public ResponseEntity<BookMarkResponseDTO> addBookMark(
-            @RequestHeader("Authorization") String accessToken, // 사용자 인증 토큰
-            @RequestParam Long shelfBookId,                     // 서재의 책 ID
-            @RequestParam Integer pageNumber,                   // 페이지 번호
-            @RequestParam String content                        // 책갈피 내용
+    public ResponseEntity<String> addBookMark(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam Long shelfBookId, // 책 ID
+            @RequestParam Integer pageNumber, // 페이지 번호
+            @RequestParam  String content // 책갈피 내용 (선택적)
     ) {
         try {
-            // 토큰 정보 API를 통해 kakaoUserId 추출
-            Long kakaoId = authService.kakaoGetUserIdFromTokenInfo(accessToken);
+            bookMarkService.addBookMark(shelfBookId, pageNumber, content);
+            return ResponseEntity.ok("책갈피가 성공적으로 추가되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("책갈피 추가 중 오류가 발생했습니다.");
+        }
+    }
 
-            if (kakaoId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null); // 유효하지 않은 토큰
-            }
-
-            // 책갈피 추가 및 반환
-            BookMarkResponseDTO bookMarkResponse = bookMarkService.addBookMarkForUser(kakaoId, shelfBookId, pageNumber, content);
-            return ResponseEntity.ok(bookMarkResponse);
-
+    // 특정 책의 전체 책갈피 조회 API
+    @GetMapping("/list")
+    public ResponseEntity<List<BookMarkDTO>> getBookMarks(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam Long shelfBookId) {
+        try {
+            List<BookMarkDTO> bookMarks = bookMarkService.getBookMarksByShelfBookId(shelfBookId);
+            return ResponseEntity.ok(bookMarks);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    // 책갈피 삭제 API
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteBookMark(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam Long bookmarkId) {
+        try {
+            bookMarkService.deleteBookMark(bookmarkId);
+            return ResponseEntity.ok("책갈피가 성공적으로 삭제되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("책갈피 삭제 중 오류가 발생했습니다.");
         }
     }
 }

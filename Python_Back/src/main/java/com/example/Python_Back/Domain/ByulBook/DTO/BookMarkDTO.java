@@ -15,5 +15,5 @@ public class BookMarkDTO {
     private Integer pageNumber;
     private String content;
     private LocalDateTime createdAt;
-
+    private LocalDateTime updatedAt;
 }
