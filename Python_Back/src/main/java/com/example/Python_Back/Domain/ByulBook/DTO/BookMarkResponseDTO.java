@@ -14,6 +14,6 @@ public class BookMarkResponseDTO {
     private Integer pageNumber;           // 페이지 번호
     private String content;               // 책갈피 내용
     private LocalDateTime createdAt;      // 생성일
-    private LocalDateTime updateAt;       // 수정일
+
 
 }

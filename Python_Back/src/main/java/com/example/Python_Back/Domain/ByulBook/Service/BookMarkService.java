@@ -1,11 +1,13 @@
 package com.example.Python_Back.Domain.ByulBook.Service;
 
 import com.example.Python_Back.Domain.ByulBook.DTO.BookMarkDTO;
+import com.example.Python_Back.Domain.ByulBook.DTO.BookMarkResponseDTO;
 import com.example.Python_Back.Domain.ByulBook.Entity.BookMark;
 import com.example.Python_Back.Domain.ByulBook.Entity.ShelfBook;
 import com.example.Python_Back.Domain.ByulBook.Repository.BookMarkRepository;
 import com.example.Python_Back.Domain.ByulBook.Repository.ShelfBookRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,7 +24,8 @@ public class BookMarkService {
     }
 
     // 책갈피 추가
-    public BookMark addBookMark(Long shelfBookId, Integer pageNumber, String content) {
+    @Transactional
+    public BookMarkResponseDTO addBookMark(Long shelfBookId, Integer pageNumber, String content) {
         // ShelfBook이 존재하는지 확인
         ShelfBook shelfBook = shelfBookRepository.findById(shelfBookId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 책입니다."));
@@ -33,11 +36,21 @@ public class BookMarkService {
         bookMark.setPageNumber(pageNumber);
         bookMark.setContent(content);
         bookMark.setCreatedAt(LocalDateTime.now());
-        bookMark.setUpdateAt(LocalDateTime.now());
 
-        return bookMarkRepository.save(bookMark);
+
+        BookMark savedBookMark = bookMarkRepository.save(bookMark);
+
+        // BookMark 엔티티를 BookMarkResponseDTO로 변환 후 반환
+        return new BookMarkResponseDTO(
+                savedBookMark.getBookmarkId(),
+                savedBookMark.getPageNumber(),
+                savedBookMark.getContent(),
+                savedBookMark.getCreatedAt()
+
+        );
     }
 
+    @Transactional
     // 특정 책의 전체 책갈피 조회
     public List<BookMarkDTO> getBookMarksByShelfBookId(Long shelfBookId) {
         // ShelfBook 존재 여부 확인
@@ -52,12 +65,13 @@ public class BookMarkService {
                         bookMark.getShelfBook().getShelfBookId(), // ShelfBook ID 추가
                         bookMark.getPageNumber(),
                         bookMark.getContent(),
-                        bookMark.getCreatedAt(),
-                        bookMark.getUpdateAt()
+                        bookMark.getCreatedAt()
+
                 ))
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     // 책갈피 삭제
     public void deleteBookMark(Long bookmarkId) {
         if (!bookMarkRepository.existsById(bookmarkId)) {
