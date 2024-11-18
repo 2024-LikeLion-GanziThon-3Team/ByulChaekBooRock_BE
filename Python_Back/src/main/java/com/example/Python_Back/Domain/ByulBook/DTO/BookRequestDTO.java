@@ -8,5 +8,16 @@ import java.util.List;
 @Getter
 @Setter
 public class BookRequestDTO {
-    private List<String> titles;  // 책 제목 리스트
+
+    private List<BookInfo> books; // 제목과 표지 정보를 포함한 리스트
+
+    // Getter, Setter
+
+    @Getter
+    @Setter
+    public static class BookInfo {
+        private String title; // 책 제목
+        private String coverImageUrl; // 책 표지 URL
+    }
 }
+
