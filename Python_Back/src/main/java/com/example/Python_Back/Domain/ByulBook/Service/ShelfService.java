@@ -5,6 +5,7 @@ import com.example.Python_Back.Domain.ByulBook.DTO.ShelfBooksByStatusDTO;
 import com.example.Python_Back.Domain.ByulBook.Entity.Book;
 import com.example.Python_Back.Domain.ByulBook.Entity.Shelf;
 import com.example.Python_Back.Domain.ByulBook.Entity.ShelfBook;
+import com.example.Python_Back.Domain.ByulBook.Repository.BookRepository;
 import com.example.Python_Back.Domain.ByulBook.Repository.ShelfRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +19,12 @@ import java.util.Map;
 public class ShelfService {
     private final ShelfRepository shelfRepository;
     private final BookService bookService;
+    private final BookRepository bookRepository;
 
-    public ShelfService(ShelfRepository shelfRepository, BookService bookService) {
+    public ShelfService(ShelfRepository shelfRepository, BookService bookService, BookRepository bookRepository) {
         this.shelfRepository = shelfRepository;
         this.bookService = bookService;
+        this.bookRepository = bookRepository;
     }
 
     @Transactional
@@ -30,10 +33,11 @@ public class ShelfService {
         Shelf shelf = shelfRepository.findByKakaoUser_KakaoId(kakaoId)
                 .orElseThrow(() -> new IllegalArgumentException("서재를 찾을 수 없습니다."));
 
-        // 책을 저장하거나 기존 책 반환
-        Book book = bookService.saveBookByTitle(title);
+        // 책이 Book 엔티티에 존재하는지 확인
+        Book book = bookRepository.findByTitle(title)
+                .orElseThrow(() -> new IllegalArgumentException("해당 책은 존재하지 않습니다."));
 
-        // 서재에 이미 있는 책인지 확인
+        // 서재에 이미 같은 책이 있는지 확인
         boolean alreadyExists = shelf.getShelfBooks().stream()
                 .anyMatch(shelfBook -> shelfBook.getBook().getBookId().equals(book.getBookId()));
 
@@ -45,9 +49,11 @@ public class ShelfService {
         ShelfBook shelfBook = new ShelfBook();
         shelfBook.setShelf(shelf);
         shelfBook.setBook(book);
-        shelfBook.setStatus(ShelfBook.BookStatus.안읽은책);  // 기본 상태 설정
+        shelfBook.setStatus(ShelfBook.BookStatus.안읽은책); // 기본 상태 설정
 
         shelf.getShelfBooks().add(shelfBook);
+        shelfRepository.save(shelf); // Shelf 저장 (Cascade로 ShelfBook 저장됨)
+
         return shelfBook;
     }
 
