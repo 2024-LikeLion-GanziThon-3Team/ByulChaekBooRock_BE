@@ -135,6 +135,7 @@ public class AuthService {
                 entity,
                 JsonNode.class
         );
+
         // 응답에서 사용자 ID 추출
         Long kakaoId = responseNode.getBody().get("id").asLong();
 
@@ -144,7 +145,7 @@ public class AuthService {
         log.info("탈퇴 응답: {}", responseNode.getBody().toPrettyString());
 
         // 반환할 때 메시지를 포함한 전체 JSON을 반환하도록 조정
-        return responseNode.getBody().toString(); // 필요에 따라 반환 형식을 조정
+        return responseNode.getBody().toString(); // JSON 문자열 반환
     }
 
     @Transactional

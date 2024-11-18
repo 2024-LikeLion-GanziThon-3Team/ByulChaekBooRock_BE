@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -32,8 +33,8 @@ public class ShelfBook {
     @Enumerated(EnumType.STRING)
     private BookStatus status;  // 책 상태 (다 읽은 책, 덜 읽은 책, 안 읽은 책)
 
-   // @OneToMany(mappedBy = "shelfBook", cascade = CascadeType.ALL)
-    //private List<Bookmark> bookmarks = new ArrayList<>();  // 책갈피 목록
+    @OneToMany(mappedBy = "shelfBook", cascade = CascadeType.ALL)
+    private List<BookMark> bookmarks = new ArrayList<>(); // 책갈피 목록
 
 
 }
