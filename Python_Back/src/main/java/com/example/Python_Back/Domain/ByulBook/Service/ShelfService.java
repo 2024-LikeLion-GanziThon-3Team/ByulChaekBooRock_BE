@@ -67,6 +67,7 @@ public class ShelfService {
         List<ShelfBookResponseDTO> readBooks = new ArrayList<>();
         List<ShelfBookResponseDTO> partiallyReadBooks = new ArrayList<>();
         List<ShelfBookResponseDTO> unreadBooks = new ArrayList<>();
+        List<ShelfBookResponseDTO> rereadBooks = new ArrayList<>();
 
         for (ShelfBook shelfBook : shelf.getShelfBooks()) {
             ShelfBookResponseDTO shelfBookResponseDTO = new ShelfBookResponseDTO(
@@ -78,6 +79,8 @@ public class ShelfService {
                 case 다읽은책 -> readBooks.add(shelfBookResponseDTO);
                 case 덜읽은책 -> partiallyReadBooks.add(shelfBookResponseDTO);
                 case 안읽은책 -> unreadBooks.add(shelfBookResponseDTO);
+                case 또읽을책 -> rereadBooks.add(shelfBookResponseDTO);
+
             }
         }
 
@@ -86,7 +89,8 @@ public class ShelfService {
                 shelf.getKakaoUser().getKakaoId(), // 사용자 ID
                 readBooks,
                 partiallyReadBooks,
-                unreadBooks
+                unreadBooks,
+                rereadBooks
         );
     }
 }

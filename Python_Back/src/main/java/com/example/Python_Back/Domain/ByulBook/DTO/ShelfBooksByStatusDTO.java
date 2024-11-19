@@ -14,4 +14,5 @@ public class ShelfBooksByStatusDTO {
     private List<ShelfBookResponseDTO> readBooks; // 다 읽은 책
     private List<ShelfBookResponseDTO> partiallyReadBooks; // 덜 읽은 책
     private List<ShelfBookResponseDTO> unreadBooks; // 안 읽은 책
+    private List<ShelfBookResponseDTO>  rereadBooks; // 또 읽을 책
 }

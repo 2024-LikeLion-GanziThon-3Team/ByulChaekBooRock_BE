@@ -15,7 +15,8 @@ public class ShelfBook {
     public enum BookStatus {
         다읽은책,
         덜읽은책,
-        안읽은책
+        안읽은책,
+        또읽을책
     }
 
     @Id
