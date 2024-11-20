@@ -27,14 +27,16 @@ public class BookService {
     }
 
     @Transactional
-    public Book saveBookByTitle(String title) {
+    public Book saveBookByTitleAndCover(String title, String coverImageUrl) {
         // 이미 존재하는 책인지 확인 후 저장
         return bookRepository.findByTitle(title).orElseGet(() -> {
             Book newBook = new Book();
             newBook.setTitle(title);
+            newBook.setCoverImageUrl(coverImageUrl); // 표지 이미지 저장
             return bookRepository.save(newBook); // 새로운 책 저장
         });
     }
+
 
     @Transactional(readOnly = true)
     public List<String> getReviewsByBookTitle(String title) {

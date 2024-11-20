@@ -51,7 +51,7 @@ public class BookController {
                 String coverImageUrl = bookInfo.getCoverImageUrl();
 
                 // 책 저장 또는 기존 책 반환 (BookService 활용)
-                bookService.saveBookByTitle(title);
+                bookService.saveBookByTitleAndCover(title, coverImageUrl);
 
                 // 리뷰 조회
                 List<String> reviews = bookService.getReviewsByBookTitle(title);
