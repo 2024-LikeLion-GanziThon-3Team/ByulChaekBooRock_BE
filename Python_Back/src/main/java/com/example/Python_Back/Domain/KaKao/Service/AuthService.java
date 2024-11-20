@@ -70,12 +70,11 @@ public class AuthService {
             // 2. 사용자 정보 추출
             Long kakaoId = userInfo.get("id").asLong();
             String nickname = userInfo.get("properties").get("nickname").asText();
-            String profileImageUrl = userInfo.get("properties").get("profile_image").asText();
             String connectedAtString = userInfo.get("connected_at").asText();
             LocalDateTime connectedAt = LocalDateTime.parse(connectedAtString.substring(0, 19));
 
             // 3. 기존 사용자 확인 또는 생성
-            KakaoUser kakaoUser = kakaoUserRepository.findById(kakaoId).orElseGet(() -> {
+            KakaoUser kakaoUser = kakaoUserRepository.findByKakaoId(kakaoId).orElseGet(() -> {
                 // 새로운 사용자 생성
                 KakaoUser newUser = new KakaoUser();
                 newUser.setKakaoId(kakaoId);
