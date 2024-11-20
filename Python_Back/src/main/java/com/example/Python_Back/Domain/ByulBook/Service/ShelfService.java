@@ -1,5 +1,6 @@
 package com.example.Python_Back.Domain.ByulBook.Service;
 
+import com.example.Python_Back.Domain.ByulBook.DTO.BookMarkResponseDTO;
 import com.example.Python_Back.Domain.ByulBook.DTO.ShelfBookResponseDTO;
 import com.example.Python_Back.Domain.ByulBook.DTO.ShelfBooksByStatusDTO;
 import com.example.Python_Back.Domain.ByulBook.Entity.Book;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ShelfService {
@@ -57,7 +59,6 @@ public class ShelfService {
         return shelfBook;
     }
 
-    // 서재에서 책들을 상태별로 분류하여 반환
     public ShelfBooksByStatusDTO getShelfBooksByStatus(Long kakaoId) {
         // 서재 조회
         Shelf shelf = shelfRepository.findByKakaoUser_KakaoId(kakaoId)
@@ -67,17 +68,33 @@ public class ShelfService {
         List<ShelfBookResponseDTO> readBooks = new ArrayList<>();
         List<ShelfBookResponseDTO> partiallyReadBooks = new ArrayList<>();
         List<ShelfBookResponseDTO> unreadBooks = new ArrayList<>();
+        List<ShelfBookResponseDTO> rereadBooks = new ArrayList<>();
 
         for (ShelfBook shelfBook : shelf.getShelfBooks()) {
+            // 책갈피 리스트 생성
+            List<BookMarkResponseDTO> bookmarks = shelfBook.getBookmarks().stream()
+                    .map(bookmark -> new BookMarkResponseDTO(
+                            bookmark.getBookmarkId(),
+                            bookmark.getPageNumber(),
+                            bookmark.getContent(),
+                            bookmark.getCreatedAt()
+                    ))
+                    .collect(Collectors.toList());
+
+            // ShelfBookResponseDTO 생성
             ShelfBookResponseDTO shelfBookResponseDTO = new ShelfBookResponseDTO(
+                    shelfBook.getShelfBookId(),
                     shelfBook.getBook().getTitle(),
-                    shelfBook.getBook().getCoverImageUrl()
+                    shelfBook.getBook().getCoverImageUrl(),
+                    bookmarks
             );
 
+            // 책 상태에 따라 분류
             switch (shelfBook.getStatus()) {
                 case 다읽은책 -> readBooks.add(shelfBookResponseDTO);
                 case 덜읽은책 -> partiallyReadBooks.add(shelfBookResponseDTO);
                 case 안읽은책 -> unreadBooks.add(shelfBookResponseDTO);
+                case 또읽을책 -> rereadBooks.add(shelfBookResponseDTO);
             }
         }
 
@@ -86,7 +103,11 @@ public class ShelfService {
                 shelf.getKakaoUser().getKakaoId(), // 사용자 ID
                 readBooks,
                 partiallyReadBooks,
-                unreadBooks
+                unreadBooks,
+                rereadBooks
         );
     }
+
+
+
 }
