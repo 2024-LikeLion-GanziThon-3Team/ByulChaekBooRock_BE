@@ -3,20 +3,24 @@ package com.example.Python_Back.Domain.ByulBook.Controller;
 import com.example.Python_Back.Domain.ByulBook.DTO.BookMarkDTO;
 import com.example.Python_Back.Domain.ByulBook.DTO.BookMarkResponseDTO;
 import com.example.Python_Back.Domain.ByulBook.Service.BookMarkService;
+import com.example.Python_Back.Domain.KaKao.Service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookmark")
 public class BookMarkController {
 
     private final BookMarkService bookMarkService;
+    private final AuthService authService;
 
-    public BookMarkController(BookMarkService bookMarkService) {
+    public BookMarkController(BookMarkService bookMarkService, AuthService authService) {
         this.bookMarkService = bookMarkService;
+        this.authService = authService;
     }
 
     @PostMapping("/add")
@@ -28,7 +32,8 @@ public class BookMarkController {
     ) {
         try {
             // 책갈피 추가 및 반환
-            BookMarkResponseDTO bookMarkResponseDTO = bookMarkService.addBookMark(shelfBookId, pageNumber, content);
+            Long kakaoId = authService.kakaoGetUserIdFromTokenInfo(accessToken);
+            BookMarkResponseDTO bookMarkResponseDTO = bookMarkService.addBookMark(kakaoId, shelfBookId,pageNumber, content);
             return ResponseEntity.ok(bookMarkResponseDTO);
 
         } catch (IllegalArgumentException e) {
@@ -45,7 +50,8 @@ public class BookMarkController {
             @RequestHeader("Authorization") String accessToken,
             @RequestParam Long shelfBookId) {
         try {
-            List<BookMarkDTO> bookMarks = bookMarkService.getBookMarksByShelfBookId(shelfBookId);
+            Long kakaoId = authService.kakaoGetUserIdFromTokenInfo(accessToken);
+            List<BookMarkDTO> bookMarks = bookMarkService.getBookMarksByKakaoUserAndShelfBook(kakaoId, shelfBookId);
             return ResponseEntity.ok(bookMarks);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -60,7 +66,8 @@ public class BookMarkController {
             @RequestHeader("Authorization") String accessToken,
             @RequestParam Long bookmarkId) {
         try {
-            bookMarkService.deleteBookMark(bookmarkId);
+            Long kakaoId = authService.kakaoGetUserIdFromTokenInfo(accessToken);
+            bookMarkService.deleteBookMark(kakaoId, bookmarkId);
             return ResponseEntity.ok("책갈피가 성공적으로 삭제되었습니다.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -68,4 +75,5 @@ public class BookMarkController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("책갈피 삭제 중 오류가 발생했습니다.");
         }
     }
+
 }

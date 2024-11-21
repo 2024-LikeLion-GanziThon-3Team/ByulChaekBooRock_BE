@@ -6,6 +6,7 @@ import com.example.Python_Back.Domain.ByulBook.Entity.BookMark;
 import com.example.Python_Back.Domain.ByulBook.Entity.ShelfBook;
 import com.example.Python_Back.Domain.ByulBook.Repository.BookMarkRepository;
 import com.example.Python_Back.Domain.ByulBook.Repository.ShelfBookRepository;
+import com.example.Python_Back.Domain.KaKao.Entity.KakaoUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,15 +24,20 @@ public class BookMarkService {
         this.shelfBookRepository = shelfBookRepository;
     }
 
+
     // 책갈피 추가
     @Transactional
-    public BookMarkResponseDTO addBookMark(Long shelfBookId, Integer pageNumber, String content) {
+    public BookMarkResponseDTO addBookMark(Long kakaoId,Long shelfBookId, Integer pageNumber, String content) {
         // ShelfBook이 존재하는지 확인
         ShelfBook shelfBook = shelfBookRepository.findById(shelfBookId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 책입니다."));
 
+        KakaoUser kakaoUser = new KakaoUser();
+        kakaoUser.setKakaoId(kakaoId);
+
         // BookMark 생성 및 저장
         BookMark bookMark = new BookMark();
+        bookMark.setKakaoUser(kakaoUser);
         bookMark.setShelfBook(shelfBook);
         bookMark.setPageNumber(pageNumber);
         bookMark.setContent(content);
@@ -50,33 +56,38 @@ public class BookMarkService {
         );
     }
 
+    // 특정 사용자의 책갈피 목록 조회
     @Transactional
-    // 특정 책의 전체 책갈피 조회
-    public List<BookMarkDTO> getBookMarksByShelfBookId(Long shelfBookId) {
+    public List<BookMarkDTO> getBookMarksByKakaoUserAndShelfBook(Long kakaoId, Long shelfBookId) {
         // ShelfBook 존재 여부 확인
         if (!shelfBookRepository.existsById(shelfBookId)) {
             throw new IllegalArgumentException("존재하지 않는 책입니다.");
         }
 
-        // 책갈피 조회 및 DTO 변환
-        return bookMarkRepository.findByShelfBook_ShelfBookId(shelfBookId).stream()
+        // 사용자 기반 책갈피 조회 및 DTO 변환
+        return bookMarkRepository.findByKakaoUser_KakaoIdAndShelfBook_ShelfBookId(kakaoId, shelfBookId).stream()
                 .map(bookMark -> new BookMarkDTO(
                         bookMark.getBookmarkId(),
-                        bookMark.getShelfBook().getShelfBookId(), // ShelfBook ID 추가
+                        bookMark.getShelfBook().getShelfBookId(),
                         bookMark.getPageNumber(),
                         bookMark.getContent(),
                         bookMark.getCreatedAt()
-
                 ))
                 .collect(Collectors.toList());
     }
 
     @Transactional
     // 책갈피 삭제
-    public void deleteBookMark(Long bookmarkId) {
-        if (!bookMarkRepository.existsById(bookmarkId)) {
-            throw new IllegalArgumentException("존재하지 않는 책갈피입니다.");
+    public void deleteBookMark(Long kakaoId, Long bookmarkId) {
+        // 책갈피 존재 여부 확인
+        BookMark bookMark = bookMarkRepository.findById(bookmarkId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 책갈피입니다."));
+
+        // 삭제 권한 확인
+        if (!bookMark.getKakaoUser().getKakaoId().equals(kakaoId)) {
+            throw new IllegalArgumentException("권한이 없습니다.");
         }
-        bookMarkRepository.deleteById(bookmarkId);
+
+        bookMarkRepository.deleteByKakaoUser_KakaoIdAndBookmarkId(kakaoId, bookmarkId);
     }
 }

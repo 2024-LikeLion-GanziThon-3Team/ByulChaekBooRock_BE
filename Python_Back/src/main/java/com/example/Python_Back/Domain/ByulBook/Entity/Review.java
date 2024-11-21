@@ -24,7 +24,12 @@ public class Review {
     @JoinColumn(name = "kakaoId")
     private KakaoUser kakaoUser;
 
+
+
+    @Column(length = 500, nullable = false)
     private String content;
+
+    private String reviewImageUrl;
 
     private LocalDateTime createdAt;
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +37,9 @@ public class ShelfBook {
 
     @OneToMany(mappedBy = "shelfBook", cascade = CascadeType.ALL)
     private List<BookMark> bookmarks = new ArrayList<>(); // 책갈피 목록
+
+    private String lastTime;  // 기본값 설정
+
 
 
 }
