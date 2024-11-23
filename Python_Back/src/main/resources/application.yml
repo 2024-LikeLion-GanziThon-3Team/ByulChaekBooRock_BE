@@ -21,6 +21,6 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
 
 kakao:
-  redirect_uri: ${KAKAO_REDIRECT_URI}
+  redirect_uri: {KAKAO_REDIRECT_URI}
   api:
-    key: ${KAKAO_API_KEY}
+    key: {KAKAO_API_KEY}
